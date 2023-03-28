@@ -1,0 +1,38 @@
+2023-03-26 08:41:55+00:00 [Note] [Entrypoint]: Entrypoint script for MariaDB Server 1:10.11.2+maria~ubu2204 started.
+2023-03-26 08:41:56+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+2023-03-26 08:41:56+00:00 [Note] [Entrypoint]: Entrypoint script for MariaDB Server 1:10.11.2+maria~ubu2204 started.
+2023-03-26 08:41:56+00:00 [Note] [Entrypoint]: Initializing database files
+
+
+PLEASE REMEMBER TO SET A PASSWORD FOR THE MariaDB root USER !
+To do so, start the server, then issue the following command:
+
+'/usr/bin/mariadb-secure-installation'
+
+which will also give you the option of removing the test
+databases and anonymous user created by default.  This is
+strongly recommended for production servers.
+
+See the MariaDB Knowledgebase at https://mariadb.com/kb
+
+Please report any problems at https://mariadb.org/jira
+
+The latest information about MariaDB is available at https://mariadb.org/.
+
+Consider joining MariaDB's strong and vibrant community:
+https://mariadb.org/get-involved/
+
+2023-03-26 08:41:59+00:00 [Note] [Entrypoint]: Database files initialized
+2023-03-26 08:41:59+00:00 [Note] [Entrypoint]: Starting temporary server
+2023-03-26 08:41:59+00:00 [Note] [Entrypoint]: Waiting for server startup
+2023-03-26 08:42:00+00:00 [Note] [Entrypoint]: Temporary server started.
+2023-03-26 08:42:02+00:00 [Note] [Entrypoint]: Securing system users (equivalent to running mysql_secure_installation)
+
+2023-03-26 08:42:02+00:00 [Note] [Entrypoint]: /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/init.sql
+
+
+2023-03-26 08:42:02+00:00 [Note] [Entrypoint]: Stopping temporary server
+2023-03-26 08:42:02+00:00 [Note] [Entrypoint]: Temporary server stopped
+
+2023-03-26 08:42:02+00:00 [Note] [Entrypoint]: MariaDB init process done. Ready for start up.
+

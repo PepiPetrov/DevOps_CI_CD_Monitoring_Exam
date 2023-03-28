@@ -1,0 +1,127 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1284.v2fe8ed4573d4">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2125.vddb_a_44a_d605e"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2125.vddb_a_44a_d605e">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.37.0">
+      <projectUrl>http://192.168.99.102:3000/vagrant/exam/</projectUrl>
+      <displayName></displayName>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.37.0">
+          <spec></spec>
+        </com.cloudbees.jenkins.GitHubPushTrigger>
+        <hudson.triggers.SCMTrigger>
+          <spec></spec>
+          <ignorePostCommitHooks>false</ignorePostCommitHooks>
+        </hudson.triggers.SCMTrigger>
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3641.vf58904a_b_b_5d8">
+    <script>pipeline
+{
+    agent
+    {
+        label &apos;docker&apos;
+    }
+    environment
+    {
+        DOCKERHUB_CREDENTIALS = credentials(&apos;docker-hub&apos;)
+    }
+    stages
+    {
+        stage(&apos;Clone&apos;)
+        {
+            steps
+            {
+                git branch: &apos;main&apos;, url: &apos;http://192.168.99.102:3000/vagrant/exam&apos;
+            }
+        }
+        stage(&apos;Build&apos;)
+        {
+            steps
+            {
+                sh &apos;docker network create exam-net || true&apos;
+                sh &apos;docker image build -t img-stor storage&apos;
+                sh &apos;docker image build -t img-prod generator&apos;
+                sh &apos;docker image build -t img-cons client&apos;
+            }
+        }
+        stage(&apos;Run (Test)&apos;)
+        {
+            steps
+            {
+                sh &apos;docker container rm -f dob-storage || true&apos;
+                sh &apos;docker container rm -f dob-producer || true&apos;
+                sh &apos;docker container rm -f dob-consumer || true&apos;
+                sh &apos;docker run --name dob-storage -d --network exam-net -e MYSQL_ROOT_PASSWORD=\&apos;ExamPa$$w0rd\&apos; img-stor&apos;
+                sh &apos;docker run --name dob-producer -d --network exam-net img-prod&apos;
+                sh &apos;docker run --name dob-consumer -d --network exam-net -p 8080:5000 -e MYSQL_ROOT_PASSWORD=\&apos;ExamPa$$w0rd\&apos; img-cons&apos;
+            }
+        }
+        stage(&apos;Test reachability&apos;)
+        {
+            steps
+            {
+                sleep 5
+                sh &apos;&apos;&apos;echo &quot;Test - Reachability&quot;
+echo $(curl --write-out &quot;%{http_code}&quot; --silent --output /dev/null http://192.168.99.102:8080) | grep 200&apos;&apos;&apos;
+            }
+        }
+        stage(&apos;Login&apos;)
+        {
+            steps
+            {
+                sh &apos;echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin&apos;
+            }
+        }
+        stage(&apos;Image Build and Push&apos;)
+        {
+            steps
+            {
+                sh &apos;docker image build -t $DOCKERHUB_CREDENTIALS_USR/img-stor storage&apos;
+                sh &apos;docker image push $DOCKERHUB_CREDENTIALS_USR/img-stor&apos;
+                sh &apos;docker image build -t $DOCKERHUB_CREDENTIALS_USR/img-prod generator&apos;
+                sh &apos;docker image push $DOCKERHUB_CREDENTIALS_USR/img-prod&apos;
+                sh &apos;docker image build -t $DOCKERHUB_CREDENTIALS_USR/img-cons client&apos;
+                sh &apos;docker image push $DOCKERHUB_CREDENTIALS_USR/img-cons&apos;
+            }
+        }
+        stage(&apos;Run (Production)&apos;)
+        {
+            steps
+            {
+                sh &apos;docker container rm -f dob-storage || true&apos;
+                sh &apos;docker container rm -f dob-producer || true&apos;
+                sh &apos;docker container rm -f dob-consumer || true&apos;
+                sh &apos;docker run --name dob-storage -d --network exam-net -e MYSQL_ROOT_PASSWORD=\&apos;ExamPa$$w0rd\&apos; $DOCKERHUB_CREDENTIALS_USR/img-stor&apos;
+                sh &apos;docker run --name dob-producer -d --network exam-net $DOCKERHUB_CREDENTIALS_USR/img-prod&apos;
+                sh &apos;docker run --name dob-consumer -d --network exam-net -p 8080:5000 -e MYSQL_ROOT_PASSWORD=\&apos;ExamPa$$w0rd\&apos; $DOCKERHUB_CREDENTIALS_USR/img-cons&apos;
+            }
+        }
+    }
+    post
+    {
+        always
+        {
+            cleanWs()
+        }
+    }
+}
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
